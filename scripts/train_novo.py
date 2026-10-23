@@ -3,7 +3,7 @@ import os
 import gc
 #from stable_baselines3.common.vec_env import SubprocVecEnv
 from stable_baselines3.common.env_util import make_vec_env
-from stable_baselines3.commom.vec_env import DummyVecEnv
+from stable_baselines3.common.vec_env import DummyVecEnv
 # Garante que o Python encontre a pasta 'envs' mesmo rodando de dentro de 'scripts'
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
