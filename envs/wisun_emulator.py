@@ -18,7 +18,7 @@ class Packet:
     timestamp_chegada: float 
 
 class WiSUN_Emulator:
-    def __init__(self,
+    def _init_(self,
                  topology_name: str = "Linear",
                  lambda_uc16: float = 10.0,
                  lambda_mmtc: float = 50.0,
@@ -32,7 +32,7 @@ class WiSUN_Emulator:
         self.periodo_uc3 = periodo_uc3
         self.max_hops = max_hops
         
-        # Valores de fallback de segurança caso o arquivo de calibração falhe
+        # Valores de fallback de segurança
         self.alpha_uc16 = 20.0
         self.alpha_uc3 = 35.0
         self.beta = 10.0
@@ -40,21 +40,15 @@ class WiSUN_Emulator:
         self.pdr_slope = -0.015
         self.pdr_intercept = 1.0
         
-        # Injeta as variáveis físicas reais da topologia (ex: Lactec)
-        self._carregar_calibracao()
-        
         self.packet_counter = 0
         self.last_uc3_burst_time = 0.0
-
-        self.pdr_slope = -0.015
-        self.pdr_intercept = 1.0
         
-        # NOVOS Fallbacks de tamanho baseados nas normas
+        # NOVOS Fallbacks definidos ANTES de carregar a calibração
         self.tamanho_uc16 = 100
         self.tamanho_uc3 = 400
         self.tamanho_mmtc = 150
         
-        # Injeta as variáveis físicas reais da topologia (ex: Lactec)
+        # Agora sim injeta as variáveis físicas reais, sem gerar erro
         self._carregar_calibracao()
 
     def _carregar_calibracao(self):
@@ -94,8 +88,9 @@ class WiSUN_Emulator:
                     self.tamanho_mmtc = dados.get('tamanho_mmtc', self.tamanho_mmtc)
                     
             except Exception as e:
-                print(f"Aviso WiSUN_Emulator: Falha ao ler JSON ({e}).")
-
+                #print(f"Aviso WiSUN_Emulator: Falha ao ler JSON ({e}).")
+                pass
+            
     def _calcular_atraso(self, hop_count: int, tipo_trafego: str) -> float:
         """
         Calcula o atraso do pacote dentro da malha Wi-SUN antes de chegar no 5G.
