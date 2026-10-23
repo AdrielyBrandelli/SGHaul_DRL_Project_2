@@ -104,7 +104,7 @@ def evaluate_model_detailed(modelo, env, seeds_list):
 def pipeline_definitivo_artigo(max_steps=80000):
     # Caminho base apontando direto para o seu Google Drive
     PASTA_DRIVE = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "resultados"))
-    os.makedirs(PASTA_DRIVE, existment=True)
+    os.makedirs(PASTA_DRIVE, exist_ok=True)
     
     # Criando as pastas dentro do seu Drive em tempo real
     os.makedirs(f"{PASTA_DRIVE}/data", exist_ok=True)
