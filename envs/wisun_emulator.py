@@ -46,6 +46,17 @@ class WiSUN_Emulator:
         self.packet_counter = 0
         self.last_uc3_burst_time = 0.0
 
+        self.pdr_slope = -0.015
+        self.pdr_intercept = 1.0
+        
+        # NOVOS Fallbacks de tamanho baseados nas normas
+        self.tamanho_uc16 = 100
+        self.tamanho_uc3 = 400
+        self.tamanho_mmtc = 150
+        
+        # Injeta as variáveis físicas reais da topologia (ex: Lactec)
+        self._carregar_calibracao()
+
     def _carregar_calibracao(self):
         """Lê os parâmetros físicos da topologia e aplica o fator de estresse."""
         caminho_json = os.path.join("data", "calibracao.json")
@@ -74,6 +85,13 @@ class WiSUN_Emulator:
                     self.lambda_mmtc = dados.get('lambda_mmtc', self.lambda_mmtc)
                     self.burst_uc3 = int(dados.get('burst_uc3', self.burst_uc3) * fator_estresse_medidores)
                     self.periodo_uc3 = dados.get('periodo_uc3', self.periodo_uc3)
+
+                    self.periodo_uc3 = dados.get('periodo_uc3', self.periodo_uc3)
+                    
+                    # CARREGAR TAMANHOS DE PACOTE DO JSON
+                    self.tamanho_uc16 = dados.get('tamanho_uc16', self.tamanho_uc16)
+                    self.tamanho_uc3 = dados.get('tamanho_uc3', self.tamanho_uc3)
+                    self.tamanho_mmtc = dados.get('tamanho_mmtc', self.tamanho_mmtc)
                     
             except Exception as e:
                 print(f"Aviso WiSUN_Emulator: Falha ao ler JSON ({e}).")
@@ -87,16 +105,8 @@ class WiSUN_Emulator:
         epsilon = np.random.normal(loc=0.0, scale=self.std_dev_jitter)
         d_wisun = (alpha * hop_count) + self.beta + epsilon
         
-        d_wisun = max(1.0, d_wisun)
-        
-        # --- TRAVA DE SANIDADE URLLC ---
-        # Impede que o atraso interno do Wi-SUN estoure os 250ms.
-        # Sem isso, o pacote crítico chegaria no 5G já violando o SLA de 300ms,
-        # e a IA seria punida por um atraso que ela não causou.
-        if tipo_trafego == 'UC16':
-            d_wisun = min(d_wisun, 250.0)
-            
-        return d_wisun
+        return max(1.0, d_wisun)
+
 
     def _simular_pdr(self, hop_count: int) -> bool:
         """
@@ -121,7 +131,8 @@ class WiSUN_Emulator:
                 pacotes_gerados.append(Packet(
                     id_pacote=self.packet_counter,
                     tipo_trafego='UC16',
-                    tamanho_bytes=64,
+                    tamanho_bytes=self.tamanho_uc16,
+                    #tamanho_bytes=64,
                     hop_count=hop_count,
                     d_wisun=self._calcular_atraso(hop_count, 'UC16'),
                     timestamp_chegada=current_time + np.random.uniform(0, step_duration)
@@ -138,7 +149,8 @@ class WiSUN_Emulator:
                     pacotes_gerados.append(Packet(
                         id_pacote=self.packet_counter,
                         tipo_trafego='UC3',
-                        tamanho_bytes=64,
+                        tamanho_bytes=self.tamanho_uc3,
+                        #tamanho_bytes=64,
                         hop_count=hop_count,
                         d_wisun=self._calcular_atraso(hop_count, 'UC3'),
                         timestamp_chegada=current_time + np.random.uniform(0, step_duration)
@@ -153,7 +165,8 @@ class WiSUN_Emulator:
                 pacotes_gerados.append(Packet(
                     id_pacote=self.packet_counter,
                     tipo_trafego='mMTC',
-                    tamanho_bytes=64, 
+                    tamanho_bytes=self.tamanho_mmtc,
+                    #tamanho_bytes=64, 
                     hop_count=hop_count,
                     d_wisun=self._calcular_atraso(hop_count, 'mMTC'),
                     timestamp_chegada=current_time + np.random.uniform(0, step_duration)

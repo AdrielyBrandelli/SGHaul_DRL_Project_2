@@ -30,9 +30,28 @@ warnings.filterwarnings("ignore")
 class QueueProportionalHeuristic:
     def predict(self, obs, deterministic=True):
         if len(obs.shape) > 1: obs = obs[0]
-        t = max(0, obs[0]) + max(0, obs[1]) + max(0, obs[2])
-        if t == 0: return np.array([(1/3)*2-1, (1/3)*2-1, (1/3)*2-1]), None
-        return (np.array([max(0, obs[0])/t, max(0, obs[1])/t, max(0, obs[2])/t]) * 2.0) - 1.0, None
+        
+        # 1. Lê as latências exatas do estado (URLLC, eMBB, mMTC)
+        lats = np.array([max(0, obs[0]), max(0, obs[1]), max(0, obs[2])])
+        t = np.sum(lats)
+        
+        # 2. Caso de contingência: rede sem latência (distribuição uniforme)
+        if t == 0:
+            return np.array([0.0, 0.0, 0.0]), None
+            
+        # 3. Proporção desejada
+        p = lats / t
+        
+        # 4. Inversão do Softmax via logaritmo
+        epsilon = 1e-5
+        p = np.clip(p, epsilon, 1.0)
+        a = np.log(p)
+        
+        # 5. Ancoragem de translação dentro do action_space [-1, 1]
+        a = a - np.max(a) + 1.0
+        a = np.clip(a, -1.0, 1.0)
+        
+        return a, None
 
 def evaluate_model_detailed(modelo, env, seeds_list):
     resultados = []
@@ -84,7 +103,8 @@ def evaluate_model_detailed(modelo, env, seeds_list):
 
 def pipeline_definitivo_artigo(max_steps=80000):
     # Caminho base apontando direto para o seu Google Drive
-    PASTA_DRIVE = "/content/drive/MyDrive/DRL_SGHaul_Resultados"
+    PASTA_DRIVE = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "resultados"))
+    os.makedirs(PASTA_DRIVE, existment=True)
     
     # Criando as pastas dentro do seu Drive em tempo real
     os.makedirs(f"{PASTA_DRIVE}/data", exist_ok=True)
@@ -144,7 +164,7 @@ def pipeline_definitivo_artigo(max_steps=80000):
                 stop_train_callback = StopTrainingOnNoModelImprovement(max_no_improvement_evals=4, min_evals=3, verbose=0)
                 eval_callback = EvalCallback(env_eval, eval_freq=5000, callback_after_eval=stop_train_callback, verbose=0)
 
-                print(f"\n🚀 Treinando {algo} (Perfil: {perfil['nome']} | seed={tr_seed})")
+                print(f"\n Treinando {algo} (Perfil: {perfil['nome']} | seed={tr_seed})")
                 
                 # Medição do tempo de treino
                 t_inicio_treino = time.perf_counter()

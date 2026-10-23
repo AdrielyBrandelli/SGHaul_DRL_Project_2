@@ -4,23 +4,31 @@ import os
 import glob
 import pandas as pd
 
-MAPA_UC = {
-    'event notification': 'UC16',
-    'event acknowledge': 'UC16',
-    'operation data request': 'UC3',
-    'operation data response': 'UC3',
-    'association request': 'UC3',
-    'association response': 'UC3',
-    'disassociation request': 'UC3',
-    'disassociation response': 'UC3',
-    'register request': 'UC1',
-    'availability request': 'UC17',
-    'availability response': 'UC17'
+# Mapeamento Baseado na Publicação da Lactec (MDPI), 3GPP TS 22.104 e IETF RFC 8036
+CONFIG_TRAFEGO_SGH_LACTEC = {
+    # UC16 (Alarm/Event) -> URLLC (Norma IETF C1 < 100B / 3GPP 140B)
+    'event notification':      {'slice': 'UC16', 'payload': 100},
+    'event acknowledge':       {'slice': 'UC16', 'payload': 100},
+    
+    # UC3 (Meter Reading) -> eMBB (Norma IETF C4 < 400B)
+    'operation data request':  {'slice': 'UC3',  'payload': 400},
+    'operation data response': {'slice': 'UC3',  'payload': 400},
+    
+    # UC1/UC17 (Registration/Availability) -> mMTC (Norma IETF C2/C3 < 150B a 200B)
+    'register request':        {'slice': 'mMTC', 'payload': 150},
+    'association request':     {'slice': 'mMTC', 'payload': 150},
+    'association response':    {'slice': 'mMTC', 'payload': 150},
+    "disassociation request":  {'slice': 'mMTC', 'payload': 150},
+    "disassociation response": {'slice': 'mMTC', 'payload': 150},
+    'availability request':    {'slice': 'mMTC', 'payload': 150},
+    'availability response':   {'slice': 'mMTC', 'payload': 150}
 }
 
 def _extrair_dados_tx(line):
     msg_clean = None
-    for key in MAPA_UC.keys():
+    
+    # Busca a mensagem exata no dicionário
+    for key in CONFIG_TRAFEGO_SGH_LACTEC.keys():
         if key in line.lower():
             msg_clean = key
             break
@@ -28,23 +36,17 @@ def _extrair_dados_tx(line):
     if not msg_clean:
         return None
         
-    uc_type = MAPA_UC[msg_clean]
+    uc_type = CONFIG_TRAFEGO_SGH_LACTEC[msg_clean]['slice']
+    tamanho_bytes = CONFIG_TRAFEGO_SGH_LACTEC[msg_clean]['payload']
     
     match_t0 = re.search(r't0=(\d+)', line)
     if not match_t0:
         print(f"[ALERTA PARSER] Mensagem '{msg_clean}' sem t0 na linha: {line[:60]}...")
         return None
+        
     t0 = int(match_t0.group(1))
     
-    match_size = re.search(r'UDP SIZE\s*=\s*(\d+)', line)
-    if match_size:
-        tamanho_bytes = int(match_size.group(1))
-    else:
-        # Só imprime alerta para UC3 porque 64 bytes pro UC3 é irreal
-        if uc_type == 'UC3':
-            print(f"[ALERTA PARSER] UC3 sem tamanho definido no log. Usando fallback 64B. Linha: {line[:60]}...")
-        tamanho_bytes = 64
-    
+    # Retorna o UC, o Tamanho da Norma (ignorando o tamanho irreal do log) e o Tempo
     return uc_type, tamanho_bytes, t0
 
 def parse_excel_linear(input_file: str) -> list:
