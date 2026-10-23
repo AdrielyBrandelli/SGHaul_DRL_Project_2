@@ -1,5 +1,7 @@
 import sys
 import os
+from stable_baselines3.common.vec_env import SubprocVecEnv
+from stable_baselines3.common.env_util import make_vec_env
 
 # Garante que o Python encontre a pasta 'envs' mesmo rodando de dentro de 'scripts'
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -153,7 +155,13 @@ def pipeline_definitivo_artigo(max_steps=80000):
                 if not ja_avaliado.empty:
                     df_val = df_val.drop(ja_avaliado.index)
 
-                env_treino = SGHaulEnv(w1=perfil['w1'], w2=perfil['w2'], w3=perfil['w3'], w4=perfil['w4'])
+                #env_treino = SGHaulEnv(w1=perfil['w1'], w2=perfil['w2'], w3=perfil['w3'], w4=perfil['w4'])
+                # Empacota os parâmetros
+                env_kwargs = {'w1': perfil['w1'], 'w2': perfil['w2'], 'w3': perfil['w3'], 'w4': perfil['w4']}
+
+                # Cria 8 simulações simultâneas usando os 8 núcleos físicos do i7
+                env_treino = make_vec_env(SGHaulEnv, n_envs=8, env_kwargs=env_kwargs, vec_env_cls=SubprocVecEnv, seed=tr_seed)
+
                 env_eval = SGHaulEnv(w1=perfil['w1'], w2=perfil['w2'], w3=perfil['w3'], w4=perfil['w4'])
                 np.random.seed(tr_seed)
                 
