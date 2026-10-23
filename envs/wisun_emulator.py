@@ -18,7 +18,7 @@ class Packet:
     timestamp_chegada: float 
 
 class WiSUN_Emulator:
-    def _init_(self,
+    def __init__(self,
                  topology_name: str = "Linear",
                  lambda_uc16: float = 10.0,
                  lambda_mmtc: float = 50.0,
@@ -90,7 +90,7 @@ class WiSUN_Emulator:
             except Exception as e:
                 #print(f"Aviso WiSUN_Emulator: Falha ao ler JSON ({e}).")
                 pass
-            
+
     def _calcular_atraso(self, hop_count: int, tipo_trafego: str) -> float:
         """
         Calcula o atraso do pacote dentro da malha Wi-SUN antes de chegar no 5G.
