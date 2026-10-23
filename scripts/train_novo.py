@@ -1,22 +1,5 @@
 import sys
 import os
-import os
-from stable_baselines3 import PPO # ou SAC, DDPG
-
-caminho_modelo = "modelo_sghaul.zip"
-
-# Se o arquivo já existe, carrega o cérebro treinado
-if os.path.exists(caminho_modelo):
-    print("Modelo encontrado! Continuando o treinamento...")
-    model = PPO.load(caminho_modelo, env=env)
-# Se não existe, cria um bebê do zero
-else:
-    print("Nenhum modelo encontrado. Iniciando do zero...")
-    model = PPO("MlpPolicy", env, verbose=1, tensorboard_log="./logs/")
-
-# Inicia o treino (o reset_num_timesteps=False faz os gráficos do TensorBoard continuarem na mesma linha)
-model.learn(total_timesteps=500000, reset_num_timesteps=False)
-model.save(caminho_modelo)
 
 # Garante que o Python encontre a pasta 'envs' mesmo rodando de dentro de 'scripts'
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
