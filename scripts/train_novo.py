@@ -118,11 +118,13 @@ def pipeline_definitivo_artigo(max_steps=80000):
     arq_val = f"{PASTA_DRIVE}/data/validation_results_detailed.csv"
 
     perfis = [
-        {'nome': 'Balanceado',  'w1': 100.0, 'w2': 100.0, 'w3': 50.0, 'w4': 50.0},
-        {'nome': 'Foco_eMBB',   'w1': 300.0, 'w2': 50.0,  'w3': 50.0, 'w4': 50.0},
-        {'nome': 'Foco_URLLC',  'w1': 50.0,  'w2': 300.0, 'w3': 50.0, 'w4': 50.0},
-        {'nome': 'Eco_Saver',   'w1': 100.0, 'w2': 100.0, 'w3': 200.0, 'w4': 200.0},
-        {'nome': 'High_Stakes', 'w1': 300.0, 'w2': 300.0, 'w3': 100.0, 'w4': 100.0}
+        #{'nome': 'Balanceado',  'w1': 100.0, 'w2': 100.0, 'w3': 50.0, 'w4': 50.0},
+        #{'nome': 'Foco_eMBB',   'w1': 300.0, 'w2': 50.0,  'w3': 50.0, 'w4': 50.0},
+        #{'nome': 'Foco_URLLC',  'w1': 50.0,  'w2': 300.0, 'w3': 50.0, 'w4': 50.0},
+        #{'nome': 'Eco_Saver',   'w1': 100.0, 'w2': 100.0, 'w3': 200.0, 'w4': 200.0},
+        #{'nome': 'High_Stakes', 'w1': 300.0, 'w2': 300.0, 'w3': 100.0, 'w4': 100.0}
+        {'nome': 'Ultra_URLLC', 'w1': 10.0, 'w2': 800.0, 'w3': 1000.0, 'w4': 10.0},
+        {'nome': 'Punicao_Latencia', 'w1': 50.0, 'w2': 1000.0, 'w3': 200.0, 'w4': 50.0}
     ]
     nomes_perfis = [p['nome'] for p in perfis]
     modelos_ai = ["SAC", "PPO", "DDPG"]
